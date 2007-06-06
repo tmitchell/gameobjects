@@ -63,7 +63,7 @@ class Vector3(object):
         
         """
         v = cls.__new__(cls, object)
-        v._v = args
+        v._v = list(args)
         return v
     
 
@@ -71,15 +71,15 @@ class Vector3(object):
     def from_iter(cls, iterable):
         """Creates a Vector3 from an iterable containing at least 3 values."""
         it = iter(iterable)
+        next = it.next
         v = cls.__new__(cls, object)
-        v._v = [ float(it.next()), float(it.next()), float(it.next()) ]        
+        v._v = [ float(next()), float(next()), float(next()) ]        
         return v
     
-    def copy():
+    def copy(self):
         """Returns a copy of this vector."""
-        
-        cls = self.__class__
-        v = cls.__new__(cls, object)
+                
+        v = self.__new__(self.__class__, object)
         v._v = self._v[:]
         return v
         #return self.from_floats(self._v[0], self._v[1], self._v[2])
@@ -142,13 +142,13 @@ class Vector3(object):
         z -- z component
         
         """
-        assert isinstance(x, float), "x must be a float"
-        assert isinstance(y, float), "y must be a float"
-        assert isinstance(z, float), "z must be a float"
+        assert ( isinstance(x, float) and 
+                 isinstance(y, float) and
+                 isinstance(z, float) ), "x, y, z must be floats"
         v = self._v
         v[0] = x
-        v[1] = x
-        v[2] = x
+        v[1] = y
+        v[2] = z
         return self
         
             
@@ -179,12 +179,29 @@ class Vector3(object):
         
     def __setitem__(self, index, value):
         
-        try:
-            assert isinstance(value, float), "Must be a float"
+        assert isinstance(value, float), "Must be a float"
+        try:            
             self._v[index] = value
         except IndexError:
             raise IndexError, "There are 3 values in this object, index should be 0, 1 or 2!"
 
+
+    def __eq__(self, rhs):
+        
+        x, y, z = self._v
+        xx, yy, zz = rhs
+        return x==xx and y==yy and z==zz
+    
+    def __ne__(self, rhs):
+        
+        x, y, z = self._v
+        xx, yy, zz = rhs
+        return x!=xx or y!=yy or z!=zz
+    
+    def __hash__(self):
+        
+        x, y, z = self._v
+        return hash((x, y, z))
 
     def __add__(self, rhs):
         """Returns the result of adding a vector (or collection of 3 numbers) from this vector."""
@@ -232,70 +249,88 @@ class Vector3(object):
         v[2] = z-oz
         return self
         
-    def __radd__(self, lhs):
+    def __rsub__(self, lhs):
         
         x, y, z = self._v
         ox, oy, oz = lhs[:3]
-        return self.from_floats(x-ox, y-oy, z-oz)
+        return self.from_floats(ox-x, oy-y, oz-z)
         
         
     def __mul__(self, rhs):
         """Return the result of multiplying this vector by another vector, or a scalar (single number)."""
         
         x, y, z = self._v
-        try:
-            return self.from_floats(x*rhs, y*rhs, z*rhs)
-        except TypeError:
+        if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs
-            return self.from_floats(x*ox, y*oy, z*oz)            
+            return self.from_floats(x*ox, y*oy, z*oz)
+        else:
+            return self.from_floats(x*rhs, y*rhs, z*rhs)
             
         
     def __imul__(self, rhs):
         """Multiply this vector by another vector, or a scalar (single number).""" 
             
         v = self._v    
-        try:
-            x, y, z = v
-            v[0] = x * rhs
-            v[1] = y * rhs
-            v[2] = z * rhs
-            #self._v = [x*rhs, y*rhs, z*rhs]
-        except TypeError:
+        if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs            
             v[0] = x * ox
             v[1] = y * oy
             v[2] = z * oz
+        else:
+            x, y, z = v
+            v[0] = x * rhs
+            v[1] = y * rhs
+            v[2] = z * rhs
                     
         return self
         
+    def __rmul__(self, lhs):
+        
+        x, y, z = self._v
+        if hasattr(lhs, "__getitem__"):
+            ox, oy, oz = lhs
+            return self.from_floats(x*ox, y*oy, z*oz)
+        else:
+            return self.from_floats(x*lhs, y*lhs, z*lhs)        
+            
         
     def __div__(self, rhs):        
         """Return the result of dividing this vector by another vector, or a scalar (single number)."""
         
         x, y, z = self._v
-        try:            
-            return self.from_floats(x/rhs, y/rhs, z/rhs)
-        except TypeError:
-            ox, oy, oz = rhs._v
+        if hasattr(rhs, "__getitem__"):
+            ox, oy, oz = rhs
             return self.from_floats(x/ox, y/oy, z/oz)
-                    
+        else:
+            return self.from_floats(x/rhs, y/rhs, z/rhs)
+        
             
     def __idiv__(self, rhs):
         """Divide this vector by another vector, or a scalar (single number)."""
         
         v = self._v
-        try:
-            x, y, z = v
-            v[0] = x/rhs
-            v[1] = y/rhs
-            v[2] = z/rhs            
-        except TypeError:
+        if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs
             v[0] = x/ox
             v[1] = y/oy
             v[2] = z/oz            
-                    
+        else:
+            x, y, z = v
+            v[0] = x/rhs
+            v[1] = y/rhs
+            v[2] = z/rhs 
+            
         return self
+            
+        
+    def __rdiv__(self, lhs):
+        
+        x, y, z = self._v
+        if hasattr(lhs, "__getitem__"):
+            ox, oy, oz = lhs
+            return self.from_floats(ox/x, oy/y, oz/z)
+        else:
+            return self.from_floats(lhs/x, lhs/y, lhs/z)
             
             
     def __neg__(self):
@@ -310,7 +345,7 @@ class Vector3(object):
     
     def __pos__(self):
         
-        return self
+        return self.copy()
     
     
     def __nonzero__(self):
@@ -333,24 +368,30 @@ class Vector3(object):
              
              
     def as_tuple(self):
-        """Returns a tuple of the x, y, z components. A little quicker than iter(vector)."""
+        """Returns a tuple of the x, y, z components. A little quicker than
+        tuple(vector)."""
         
         return tuple(self._v)
         
         
     def scale(self, scale):
-        """Scales the vector by onther vector or a scalar. Same as the *= operator."""
+        """Scales the vector by onther vector or a scalar. Same as the
+        *= operator.
+        
+        scale -- Value to scale the vector by
+        
+        """
         v = self._v
-        try:
-            x, y, z = v
-            v[0] = x*rhs
-            v[1] = y*rhs
-            v[2] = z*rhs            
-        except TypeError:
+        x, y, z = v
+        if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs
             v[0] = x*ox
             v[1] = y*oy
-            v[2] = z*oz
+            v[2] = z*oz            
+        else:         
+            v[0] = x*rhs
+            v[1] = y*rhs
+            v[2] = z*rhs            
                     
         return self
         
@@ -370,9 +411,11 @@ class Vector3(object):
         """        
         try:
             x, y, z = self._v
-            l = length / sqrt(x*x + y*y + z*z)
+            l = new_length / sqrt(x*x + y*y + z*z)
         except ZeroDivisionError:
-            self.v[:] = [0., 0., 0.]
+            self._v[0] = 0.0
+            self._v[1] = 0.0
+            self._v[2] = 0.0
             return self
             
         v = self._v
@@ -391,11 +434,13 @@ class Vector3(object):
         """
         ax, ay, az = self._v
         bx, by, bz = p
+        dx = ax-bx
+        dy = bx-by
+        dz = cx-cy
+        return sqrt( dx*dx + dy*dy + dz*dz )    
         
-        return sqrt( (ax-bx)**2 + (bx-by)**2 + (cx-cy)**2 )    
         
-        
-    def get_distance_squared(self, p):
+    def get_distance_to_squared(self, p):
         """Returns the squared distance of this vector to a point.
         
         p -- A position as a vector, or collection of 3 values.
@@ -403,8 +448,10 @@ class Vector3(object):
         """
         ax, ay, az = self._v
         bx, by, bz = p
-        
-        return ( (ax-bx)**2 + (bx-by)**2 + (cx-cy)**2 )    
+        dx = ax-bx
+        dy = bx-by
+        dz = cx-cy
+        return sqrt( dx*dx + dy*dy + dz*dz )    
         
         
     def normalise(self):
@@ -433,6 +480,7 @@ class Vector3(object):
         """
         
         return distance3d(sphere.position, self) <= sphere.radius
+     
      
     def dot(self, other):
         
@@ -478,6 +526,9 @@ def centre_point3d(points):
 if __name__ == "__main__":
     
     v1 = Vector3(2.2323, 3.43242, 1.)
+    
+    print 3*v1
+    print (2, 4, 6)*v1
     
     print (1, 2, 3)+v1
     print v1('xxxyyyzzz')

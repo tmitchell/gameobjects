@@ -7,7 +7,10 @@ class GameClock(object):
     def __init__(self, game_ticks_per_second=100):
         
         """Create a Game Clock object.
-        game_ticks_per_second -- The number of 'AI' frames a second."""
+        
+        game_ticks_per_second -- The number of 'AI' frames a second.
+        
+        """
             
         self.game_ticks_per_second = float(game_ticks_per_second)
         self.game_tick = 1. / self.game_ticks_per_second        

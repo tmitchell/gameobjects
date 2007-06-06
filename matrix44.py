@@ -1,5 +1,4 @@
 from util import format_number
-from vector2 import Vector2
 from vector3 import Vector3
 
 from math import sin, cos, tan, sqrt, pi, radians
@@ -24,8 +23,11 @@ class Matrix44Error(Exception):
 
 class Matrix44(object):
 
-    _identity = ( (1.,0.,0.,0.), (0.,1.,0.,0.), (0.,0.,1.,0.), (0.,0.,0.,1.) )
-    
+    _identity = ( (1.0 ,0.0 ,0.0 ,0.0),
+                  (0.0 ,1.0 ,0.0 ,0.0),
+                  (0.0 ,0.0 ,1.0 ,0.0),
+                  (0.0 ,0.0 ,0.0 ,1.0) )
+        
     __slots__ = ['_m']
     
     def __init__(self, *args):
@@ -46,10 +48,13 @@ class Matrix44(object):
         elif len(args) == 4:                        
             self._m = [1.,0.,0.,0., 0.,1.,0.,0., 0.,0.,1.,0., 0.,0.,0.,1.]
             
-            self._set_row_0(args[0])
-            self._set_row_1(args[1])
-            self._set_row_2(args[2])
-            self._set_row_3(args[3])
+            row_0, row_1, row_2, row_3 = self._setters
+            r1, r2, r3, r4 = args
+            
+            row_0(r1)
+            row_1(r2)
+            row_2(r3)
+            row_3(r4)
             
         else:
             raise TypeError("Matrix44.__init__() takes 0, or 4 arguments (%i given)"%len(args))
@@ -96,37 +101,55 @@ class Matrix44(object):
     y_axis = _row1
     up = _row1
     z_axis = _row2
-    heading = _row2
+    forward = _row2    
     translate = _row3
+        
+        
+    def to_opengl(self):
+        
+        """Converts the matrix in to a list of values, suitable for using
+        with glLoadMatrix*"""
+                        
+        return self._m[:]
+
         
        
     def set(self, row1, row2, row3, row4):
-                
-        self._m[0:4] = row1
-        self._m[4:8] = row2
-        self._m[8:12] = row3
-        self._m[12:16] = row4
+        
+        """Sets all four rows of the matrix, rows must be a sequence of 4
+        floats
+        
+        row1 -- first row
+        row2 -- second row
+        row3 -- third row
+        row4 -- fourth row
+        
+        """
+        
+        m = self._m        
+        m[0:4] = row1
+        m[4:8] = row2
+        m[8:12] = row3
+        m[12:16] = row4
         
         
     def get_row(self, row_no):
+        """Gets a row of the matrix as a tuple
         
+        row_no -- Index of row
+        
+        """
         try:
             return self._getters[row_no](self)
         except IndexError:
             raise IndexError("Row must be 0, 1, 2 or 3")
-            
         
-    def rows(self):
-        
-        for i in xrange(0, 16, 4):
-            yield tuple(self._m[i:i+4])
         
     @classmethod
     def from_iter(cls, iterable):
         """Creates a Matrix44 from an iterable of 16 values."""
         
-        m = cls.__new__(cls, object)
-        it_values = iter(iterable)
+        m = cls.__new__(cls, object)        
         m._m = map(float, iterable)
         if len(m._m) != 16:
             raise Matrix44Error("Iterable must have 16 values")
@@ -144,8 +167,9 @@ class Matrix44(object):
             
     @classmethod
     def blank(cls):        
-        """Create a blank Matrix44 (with no information). This is rarely required,
-        you may want to use an identity Matrix44, see Matrix44.identity()
+        """Creates a blank Matrix44 (with no information). This is rarely
+        required, you may want to use an identity Matrix44,
+        see Matrix44.identity()
         
         """
         
@@ -177,7 +201,13 @@ class Matrix44(object):
     
     @classmethod
     def translation(cls, x, y, z):
-        """Creates a translation Matrix44 to (x, y, z)."""
+        """Creates a translation Matrix44 to (x, y, z).
+        
+        x -- X Coordinate
+        y -- Y Coordinate
+        z -- Z Coordinate
+        
+        """
         
         m = cls.__new__(cls, object)
         return m.make_translation(x, y, z)
@@ -185,7 +215,11 @@ class Matrix44(object):
     
     @classmethod
     def x_rotation(cls, angle):
-        """Creates a Matrix44 that does a rotation about the x axis."""
+        """Creates a Matrix44 that does a rotation about the x axis.
+        
+        angle -- Angle of rotation (in radians)
+        
+        """
             
         m = cls.__new__(cls, object)
         return m.make_x_rotation(angle)
@@ -193,7 +227,11 @@ class Matrix44(object):
 
     @classmethod
     def y_rotation(cls, angle):
-        """Creates a Matrix44 that does a rotation about the y axis."""
+        """Creates a Matrix44 that does a rotation about the y axis.
+        
+        angle -- Angle of rotation (in radians)
+        
+        """
         
         m = cls.__new__(cls, object)
         return m.make_y_rotation(angle)
@@ -201,7 +239,11 @@ class Matrix44(object):
     
     @classmethod
     def z_rotation(cls, angle):
-        """Creates a Matrix44 that does a rotation about the z axis."""
+        """Creates a Matrix44 that does a rotation about the z axis.
+        
+        angle -- Angle of rotation (in radians)
+        
+        """
         
         m = cls.__new__(cls, object)
         return m.make_z_rotation(angle)
@@ -211,7 +253,8 @@ class Matrix44(object):
     def rotation_about_axis(cls, axis, angle):
         """Creates a Matrix44 that does a rotation about an axis.
         
-        Axis can be a vector or any iterable with 3 values.
+        axis -- A vector of the axis
+        angle -- Angle of rotation
         
         """
         
@@ -221,7 +264,13 @@ class Matrix44(object):
         
     @classmethod
     def xyz_rotation(cls, angle_x, angle_y, angle_z):
-        """Creates a Matrix44 that does a rotation about each axis."""
+        """Creates a Matrix44 that does a rotation about each axis.
+        
+        angle_x -- Angle of rotation, about x
+        angle_y -- Angle of rotation, about y
+        angle_z -- Angle of rotation, about z
+        
+        """
         
         m = cls.__new__(cls, object)
         return m.make_xyz_rotation(angle_x, angle_y, angle_z)
@@ -241,7 +290,12 @@ class Matrix44(object):
         """
         
         m = cls.__new__(cls, object)
-        return m.make_persepctive_projection(left, right, top, bottom, near, far)
+        return m.make_persepctive_projection( left,
+                                              right,
+                                              top,
+                                              bottom,
+                                              near,
+                                              far)
     
 
     @classmethod
@@ -265,7 +319,8 @@ class Matrix44(object):
         max_len = max( len(format_number(v)) for v in self.components() )
         
         def format_row(row):            
-            return "%s" % " ".join( format_number(value).ljust(max_len) for value in row )
+            return "%s" % " ".join \
+                ( format_number(value).ljust(max_len) for value in row )
         
         rows = [ format_row(row).rstrip() for row in self.rows() ]
         max_row_len = max(len(row) for row in rows)
@@ -277,7 +332,8 @@ class Matrix44(object):
         def format_row(row):            
             return "(%s)" % ", ".join( format_number(value) for value in row )
                 
-        return "Matrix44(%s)" % ", ".join(format_row(row) for row in self.rows())
+        return "Matrix44(%s)" % \
+            ", ".join(format_row(row) for row in self.rows())
         
     
     def __setitem__(self, coord, value):
@@ -307,7 +363,8 @@ class Matrix44(object):
         except IndexError:
             raise IndexError( "Row and Column should be 0, 1, 2 or 3" )
         except TypeError:
-            raise TypeError( "index should be two values containing the row and column" )
+            raise TypeError( "index should be two values containing"\
+                            " the row and column" )
             
             
     def __iter__(self):
@@ -323,34 +380,40 @@ class Matrix44(object):
     
             
     def __mul__(self, rhs):
-        """Returns the result of multiplying this Matrix44 by another, called by the * (multiply) operator."""
+        """Returns the result of multiplying this Matrix44 by another, called
+        by the * (multiply) operator."""
         
-        m1_0, m1_1, m1_2, m1_3, m1_4, m1_5, m1_6, m1_7, m1_8, \
-            m1_9, m1_10, m1_11, m1_12, m1_13, m1_14, m1_15 = self._m
-        m2_0, m2_1, m2_2, m2_3, m2_4, m2_5, m2_6, m2_7, m2_8, \
-            m2_9, m2_10, m2_11, m2_12, m2_13, m2_14, m2_15 = rhs._m
+        m1_0,  m1_1,  m1_2,  m1_3, \
+        m1_4,  m1_5,  m1_6,  m1_7, \
+        m1_8,  m1_9,  m1_10, m1_11, \
+        m1_12, m1_13, m1_14, m1_15 = self._m
+        
+        m2_0,  m2_1,  m2_2,  m2_3, \
+        m2_4,  m2_5,  m2_6,  m2_7, \
+        m2_8,  m2_9,  m2_10, m2_11, \
+        m2_12, m2_13, m2_14, m2_15 = rhs._m
                 
-        retm =       [ m2_0 * m1_0 + m2_1 * m1_4 + m2_2 * m1_8 + m2_3 * m1_12,
-                       m2_0 * m1_1 + m2_1 * m1_5 + m2_2 * m1_9 + m2_3 * m1_13,
-                       m2_0 * m1_2 + m2_1 * m1_6 + m2_2 * m1_10 + m2_3 * m1_14,
-                       m2_0 * m1_3 + m2_1 * m1_7 + m2_2 * m1_11 + m2_3 * m1_15,
+        retm =  [ m2_0 * m1_0 + m2_1 * m1_4 + m2_2 * m1_8 + m2_3 * m1_12,
+                  m2_0 * m1_1 + m2_1 * m1_5 + m2_2 * m1_9 + m2_3 * m1_13,
+                  m2_0 * m1_2 + m2_1 * m1_6 + m2_2 * m1_10 + m2_3 * m1_14,
+                  m2_0 * m1_3 + m2_1 * m1_7 + m2_2 * m1_11 + m2_3 * m1_15,
                        
-                       m2_4 * m1_0 + m2_5 * m1_4 + m2_6 * m1_8 + m2_7 * m1_12,
-                       m2_4 * m1_1 + m2_5 * m1_5 + m2_6 * m1_9 + m2_7 * m1_13,
-                       m2_4 * m1_2 + m2_5 * m1_6 + m2_6 * m1_10 + m2_7 * m1_14,
-                       m2_4 * m1_3 + m2_5 * m1_7 + m2_6 * m1_11 + m2_7 * m1_15,
+                  m2_4 * m1_0 + m2_5 * m1_4 + m2_6 * m1_8 + m2_7 * m1_12,
+                  m2_4 * m1_1 + m2_5 * m1_5 + m2_6 * m1_9 + m2_7 * m1_13,
+                  m2_4 * m1_2 + m2_5 * m1_6 + m2_6 * m1_10 + m2_7 * m1_14,
+                  m2_4 * m1_3 + m2_5 * m1_7 + m2_6 * m1_11 + m2_7 * m1_15,
                        
-                       m2_8 * m1_0 + m2_9 * m1_4 + m2_10 * m1_8 + m2_11 * m1_12,
-                       m2_8 * m1_1 + m2_9 * m1_5 + m2_10 * m1_9 + m2_11 * m1_13,
-                       m2_8 * m1_2 + m2_9 * m1_6 + m2_10 * m1_10 + m2_11 * m1_14,
-                       m2_8 * m1_3 + m2_9 * m1_7 + m2_10 * m1_11 + m2_11 * m1_15,
+                  m2_8 * m1_0 + m2_9 * m1_4 + m2_10 * m1_8 + m2_11 * m1_12,
+                  m2_8 * m1_1 + m2_9 * m1_5 + m2_10 * m1_9 + m2_11 * m1_13,
+                  m2_8 * m1_2 + m2_9 * m1_6 + m2_10 * m1_10 + m2_11 * m1_14,
+                  m2_8 * m1_3 + m2_9 * m1_7 + m2_10 * m1_11 + m2_11 * m1_15,
                        
-                       m2_12 * m1_0 + m2_13 * m1_4 + m2_14 * m1_8 + m2_15 * m1_12,
-                       m2_12 * m1_1 + m2_13 * m1_5 + m2_14 * m1_9 + m2_15 * m1_13,
-                       m2_12 * m1_2 + m2_13 * m1_6 + m2_14 * m1_10 + m2_15 * m1_14,
-                       m2_12 * m1_3 + m2_13 * m1_7 + m2_14 * m1_11 + m2_15 * m1_15 ]
+                  m2_12 * m1_0 + m2_13 * m1_4 + m2_14 * m1_8 + m2_15 * m1_12,
+                  m2_12 * m1_1 + m2_13 * m1_5 + m2_14 * m1_9 + m2_15 * m1_13,
+                  m2_12 * m1_2 + m2_13 * m1_6 + m2_14 * m1_10 + m2_15 * m1_14,
+                  m2_12 * m1_3 + m2_13 * m1_7 + m2_14 * m1_11 + m2_15 * m1_15 ]
 
-        ret = self.__new__(Matrix44, object)
+        ret = self.__new__(self.__class__, object)
         ret._m = retm
 
         return ret
@@ -359,31 +422,36 @@ class Matrix44(object):
     def __imul__(self, rhs):
         """Multiplies this Matrix44 by another, called by the *= operator."""
                         
-        m1_0, m1_1, m1_2, m1_3, m1_4, m1_5, m1_6, m1_7, m1_8, \
-            m1_9, m1_10, m1_11, m1_12, m1_13, m1_14, m1_15 = self._m
-        m2_0, m2_1, m2_2, m2_3, m2_4, m2_5, m2_6, m2_7, m2_8, \
-            m2_9, m2_10, m2_11, m2_12, m2_13, m2_14, m2_15 = rhs._m
+        m1_0,  m1_1,  m1_2,  m1_3, \
+        m1_4,  m1_5,  m1_6,  m1_7, \
+        m1_8,  m1_9,  m1_10, m1_11, \
+        m1_12, m1_13, m1_14, m1_15 = self._m
+        
+        m2_0,  m2_1,  m2_2,  m2_3, \
+        m2_4,  m2_5,  m2_6,  m2_7, \
+        m2_8,  m2_9,  m2_10, m2_11, \
+        m2_12, m2_13, m2_14, m2_15 = rhs._m
         
         
-        self._m =    [ m2_0 * m1_0 + m2_1 * m1_4 + m2_2 * m1_8 + m2_3 * m1_12,
-                       m2_0 * m1_1 + m2_1 * m1_5 + m2_2 * m1_9 + m2_3 * m1_13,
-                       m2_0 * m1_2 + m2_1 * m1_6 + m2_2 * m1_10 + m2_3 * m1_14,
-                       m2_0 * m1_3 + m2_1 * m1_7 + m2_2 * m1_11 + m2_3 * m1_15,
+        self._m = [ m2_0 * m1_0 + m2_1 * m1_4 + m2_2 * m1_8 + m2_3 * m1_12,
+                    m2_0 * m1_1 + m2_1 * m1_5 + m2_2 * m1_9 + m2_3 * m1_13,
+                    m2_0 * m1_2 + m2_1 * m1_6 + m2_2 * m1_10 + m2_3 * m1_14,
+                    m2_0 * m1_3 + m2_1 * m1_7 + m2_2 * m1_11 + m2_3 * m1_15,
                        
-                       m2_4 * m1_0 + m2_5 * m1_4 + m2_6 * m1_8 + m2_7 * m1_12,
-                       m2_4 * m1_1 + m2_5 * m1_5 + m2_6 * m1_9 + m2_7 * m1_13,
-                       m2_4 * m1_2 + m2_5 * m1_6 + m2_6 * m1_10 + m2_7 * m1_14,
-                       m2_4 * m1_3 + m2_5 * m1_7 + m2_6 * m1_11 + m2_7 * m1_15,
+                    m2_4 * m1_0 + m2_5 * m1_4 + m2_6 * m1_8 + m2_7 * m1_12,
+                    m2_4 * m1_1 + m2_5 * m1_5 + m2_6 * m1_9 + m2_7 * m1_13,
+                    m2_4 * m1_2 + m2_5 * m1_6 + m2_6 * m1_10 + m2_7 * m1_14,
+                    m2_4 * m1_3 + m2_5 * m1_7 + m2_6 * m1_11 + m2_7 * m1_15,
                        
-                       m2_8 * m1_0 + m2_9 * m1_4 + m2_10 * m1_8 + m2_11 * m1_12,
-                       m2_8 * m1_1 + m2_9 * m1_5 + m2_10 * m1_9 + m2_11 * m1_13,
-                       m2_8 * m1_2 + m2_9 * m1_6 + m2_10 * m1_10 + m2_11 * m1_14,
-                       m2_8 * m1_3 + m2_9 * m1_7 + m2_10 * m1_11 + m2_11 * m1_15,
+                    m2_8 * m1_0 + m2_9 * m1_4 + m2_10 * m1_8 + m2_11 * m1_12,
+                    m2_8 * m1_1 + m2_9 * m1_5 + m2_10 * m1_9 + m2_11 * m1_13,
+                    m2_8 * m1_2 + m2_9 * m1_6 + m2_10 * m1_10 + m2_11 * m1_14,
+                    m2_8 * m1_3 + m2_9 * m1_7 + m2_10 * m1_11 + m2_11 * m1_15,
                        
-                       m2_12 * m1_0 + m2_13 * m1_4 + m2_14 * m1_8 + m2_15 * m1_12,
-                       m2_12 * m1_1 + m2_13 * m1_5 + m2_14 * m1_9 + m2_15 * m1_13,
-                       m2_12 * m1_2 + m2_13 * m1_6 + m2_14 * m1_10 + m2_15 * m1_14,
-                       m2_12 * m1_3 + m2_13 * m1_7 + m2_14 * m1_11 + m2_15 * m1_15 ]
+                    m2_12 * m1_0 + m2_13 * m1_4 + m2_14 * m1_8 + m2_15 * m1_12,
+                    m2_12 * m1_1 + m2_13 * m1_5 + m2_14 * m1_9 + m2_15 * m1_13,
+                    m2_12 * m1_2 + m2_13 * m1_6 + m2_14 * m1_10 + m2_15 * m1_14,
+                    m2_12 * m1_3 + m2_13 * m1_7 + m2_14 * m1_11 + m2_15 * m1_15]
                 
         return self
     
@@ -394,40 +462,51 @@ class Matrix44(object):
     
     
     def copy(self):
-        
+        """Returns a copy of this matrix."""
         return self.clone(self)
 
 
     def components(self):
-        """Returns an iterator for the components in the Matrix44. ie returns all 16 values."""
+        """Returns an iterator for the components in the Matrix44. ie
+        returns all 16 values."""
                 
         return iter(self._m)
 
                 
     def transposed_components(self):
-        """Returns an iterator for the components in the Matrix44 in transposed order."""
+        """Returns an iterator for the components in the Matrix44 in
+        transposed order."""
         
-        for col in self.columns():
-            for value in col:
-                yield value
-                
+        m00, m01, m02, m03, \
+        m10, m11, m12, m13, \
+        m20, m21, m22, m23, \
+        m30, m31, m32, m33 = self._m
+            
+        return iter( ( m00, m10, m20, m30,
+                       m01, m11, m21, m31,
+                       m02, m12, m22, m32,
+                       m03, m13, m23, m33 ) )
+        
                 
     def rows(self):
-        """Returns an iterator for the rows in the Matrix44 (yields 4 tuples of 4 values)."""
+        """Returns an iterator for the rows in the Matrix44 (yields 4 tuples
+        of 4 values)."""
         
-        yield self._getters[0](self)
-        yield self._getters[1](self)
-        yield self._getters[2](self)
-        yield self._getters[3](self)        
+        m = self._m
+        return iter(( tuple(m[0:4]),
+                      tuple(m[4:8]),
+                      tuple(m[8:12]),
+                      tuple(m[12:16]) ))
+        
             
             
     def columns(self):
-        """Returns an iterator for the columns in the Matrix44 (yields 4 tuples of 4 values)."""
+        """Returns an iterator for the columns in the Matrix44 (yields 4
+        tuples of 4 values)."""
         
-        yield self.get_row(0)
-        yield self.get_row(1)
-        yield self.get_row(2)
-        yield self.get_row(3)        
+        col = self.get_column
+        return iter((col(0), col(1), col(2), col(3))) 
+        
     
         
     def get_row_vec3(self, row_no):
@@ -440,7 +519,8 @@ class Matrix44(object):
         try:
             r = row_no*4
             m = self._m
-            return Vector3.from_floats(m[r], m[r+1], m[r+2])            
+            x, y, z = m[r:r+3]
+            return Vector3.from_floats(x, y, z)
         except IndexError:
             raise IndexError( "Row and Column should be 0, 1, 2 or 3" )
         
@@ -480,24 +560,29 @@ class Matrix44(object):
         """Sets the values in a column.
         
         col_no -- The index of the column
-        col -- An iterable containing the new values
+        col -- An sequence of 4 values
         
         """
         
         try:
             col_iter = iter(col)
             m = self._m
-            m[col_no] = float(col_iter.next())
-            m[col_no+4] = float(col_iter.next())
-            m[col_no+8] = float(col_iter.next())
-            m[col_no+12] = float(col_iter.next())
+            a, b, c, d = col
+            m[col_no] = float(a)
+            m[col_no+4] = float(b)
+            m[col_no+8] = float(c)
+            m[col_no+12] = float(d)
             
         except IndexError:
             raise IndexError( "Column should be 0, 1, 2 or 3" )
     
     
     def transform_vec3(self, v):
-        """Transforms a Vector3 and returns the result as a Vector3."""
+        """Transforms a Vector3 and returns the result as a Vector3.
+        
+        v -- Vector to transform
+        
+        """
         
         m = self._m        
         x, y, z = v
@@ -506,7 +591,11 @@ class Matrix44(object):
                                     x * m[2] + y * m[6] + z * m[10] + m[14] )
     
     def transform(self, v):
-        """Transforms a Vector3 and returns the result as a tuple."""
+        """Transforms a Vector3 and returns the result as a tuple.
+        
+        v -- Vector to transform
+        
+        """
         
         m = self._m        
         x, y, z = v
@@ -522,8 +611,10 @@ class Matrix44(object):
         
         """
                 
-        m1_0, m1_1, m1_2, m1_3, m1_4, m1_5, m1_6, m1_7, m1_8, \
-            m1_9, m1_10, m1_11, m1_12, m1_13, m1_14, m1_15 = self._m
+        m_0,  m_1,  m_2,  m_3, \
+        m_4,  m_5,  m_6,  m_7, \
+        m_8,  m_9,  m_10, m_11, \
+        m_12, m_13, m_14, m_15 = self._m
         
         for x, y, z in points:            
             
@@ -539,8 +630,10 @@ class Matrix44(object):
         
         """
         
-        m1_0, m1_1, m1_2, m1_3, m1_4, m1_5, m1_6, m1_7, m1_8, \
-            m1_9, m1_10, m1_11, m1_12, m1_13, m1_14, m1_15 = self._m
+        m_0, m_1, m_2, m_3, \
+        m_4, m_5, m_6, m_7, \
+        m_8, m_9, m_10, m_11, \
+        m_12, m_13, m_14, m_15 = self._m
         
         for x, y, z in points:            
             
@@ -549,37 +642,43 @@ class Matrix44(object):
                     x * m_2 + y * m_6 + z * m_10 + m_14 )
         
         
-    def rotate(self, v):        
+    def rotate_vec3(self, v):        
         """Rotates a Vector3 and returns the result.
         The translation part of the Matrix44 is ignored.
+        
+        v -- Vector to rotate
+        
         """
         
         m = self._m
         x, y, z = v
-        x = x * m[0] + y * m[4] + z * m[8]
-        y = x * m[1] + y * m[5] + z * m[9]
-        z = x * m[2] + y * m[6] + z * m[10]
-        
-        return Vector3.from_floats(x, y, z)
+        return Vector3.from_floats( x * m[0] + y * m[4] + z * m[8],
+                                    x * m[1] + y * m[5] + z * m[9],
+                                    x * m[2] + y * m[6] + z * m[10] )
         
         
-    def rotate_tuple(self, v):        
+    def rotate(self, v):        
         """Rotates a Vector3 and returns the result as a tuple
         The translation part of the Matrix44 is ignored.
+        
+        v -- Vector to rotate
+        
         """
         
         m = self._m
         x, y, z = v
-        x = x * m[0] + y * m[4] + z * m[8]
-        y = x * m[1] + y * m[5] + z * m[9]
-        z = x * m[2] + y * m[6] + z * m[10]
-        
-        return (x, y, z)        
-        
+        return ( x * m[0] + y * m[4] + z * m[8],
+                 x * m[1] + y * m[5] + z * m[9],
+                 x * m[2] + y * m[6] + z * m[10] )
+            
 
     def inverse_transform(self, v):        
         """Inverse trasforms a Vector3 and returns the result.
-        Warning: This is expensive, pre-calculate an inverse Matrix44 if you can.
+        Warning: This is expensive, pre-calculate an inverse Matrix44 if you
+        can.
+        
+        v -- Vector to transform
+        
         """
                 
         return self.get_inverse().transform(v)
@@ -588,7 +687,10 @@ class Matrix44(object):
     def make_identity(self):
         """Makes an identity Matrix44."""
         
-        self._m = [1., 0., 0., 0., 0., 1., 0., 0. ,0., 0., 1., 0., 0., 0., 0., 1.]
+        self._m = [1., 0., 0., 0.,
+                   0., 1., 0., 0.,
+                   0., 0., 1., 0.,
+                   0., 0., 0., 1.]
         return self
             
             
@@ -718,7 +820,7 @@ class Matrix44(object):
         return self
     
 
-    def make_perspective_projection(left, right, top, bottom, near, far):
+    def make_perspective_projection(self, left, right, top, bottom, near, far):
         """Makes a perspective projection Matrix44.
         
         left -- Coordinate of left of screen
@@ -728,15 +830,15 @@ class Matrix44(object):
         near -- Coordination of the near clipping plane
         far -- Coordinate of the far clipping plane
 
-        """       
-                
+        """               
+           
         self._m = [(2.*near)/(right-left),    0.,                        0.,                          0.,
                    0.,                        (2.*near)/(top-bottom),    0.,                          0.,
                    (right+left)/(right-left), (top+bottom)/(top-bottom), -((far+near)/(far-near)),   -1.,
                    0.,                        0.,                        -((2.*far*near)/(far-near)), 0.]
     
     
-    def make_perspective_projection_fov(fov, aspect, near, far):
+    def make_perspective_projection_fov(self, fov, aspect, near, far):
         """Creates a Matrix44 that projects points in to 2d space
         
         fov -- The field of view (in radians)
@@ -746,7 +848,8 @@ class Matrix44(object):
         
         """        
         
-        assert fov < pi, "The field of view should be less than pi radians (180 degrees)"
+        assert fov < pi, "The field of view should be less than pi radians"\
+        " (180 degrees)"
         
         right = tan( fov/2. ) * near
         left = - right
@@ -758,129 +861,128 @@ class Matrix44(object):
     def transpose(self):
         """Swaps the rows for columns."""
         
-        col0 = self.get_column(0)
-        col1 = self.get_column(1)
-        col2 = self.get_column(2)
-        col3 = self.get_column(3)
-        m = self._m
-        m[0:4] = col0
-        m[4:8] = col1
-        m[8:12] = col2
-        m[12:16] = col3        
+        m00, m01, m02, m03, \
+        m10, m11, m12, m13, \
+        m20, m21, m22, m23, \
+        m30, m31, m32, m33 = self._m
+                
+        self._m = [ m00, m10, m20, m30,
+                    m01, m11, m21, m31,
+                    m02, m12, m22, m32,
+                    m03, m13, m23, m33 ]    
         
         
     def get_transpose(self):
-        """Returns a Matrix44 that is a copy of this, but with rows and columns swapped."""
+        """Returns a Matrix44 that is a copy of this, but with rows and
+        columns swapped."""
         
-        new_matrix = self.blank()
-        m = new_matrix._m
-        m[0:4] = self.get_coloumn(0)
-        m[4:8] = self.get_coloumn(1)
-        m[8:12] = self.get_coloumn(2)
-        m[12:16] = self.get_coloumn(3)
-        return new_matrix
+        m00, m01, m02, m03, \
+        m10, m11, m12, m13, \
+        m20, m21, m22, m23, \
+        m30, m31, m32, m33 = self._m
+        
+        ret = self.__new__(self.__class__, object)
+                
+        ret._m = [ m00, m10, m20, m30,
+                   m01, m11, m21, m31,
+                   m02, m12, m22, m32,
+                   m03, m13, m23, m33 ]
+        
+        return ret        
      
      
     def get_inverse_rot_trans(self):
-        """Returns the inverse of a Matrix44 with only rotation and translation."""
+        """Returns the inverse of a Matrix44 with only rotation and
+        translation. This is faster than the general get_inverse method."""
                         
         ret = self.copy()
-        m=ret._m
-        i=self._m
+        m = ret._m        
                 
+        i0,  i1,  i2,  i3, \
+        i4,  i5,  i6,  i7, \
+        i8,  i9,  i10, i11, \
+        i12, i13, i14, i15 = self._m
         
-        m[5] = i[4]
-        m[10] = i[8]
-        m[4] = i[1]
-        m[6] = i[9]
-        m[8] = i[2]
-        m[9] = i[6]
+        m[1] = i4
+        m[4] = i1
+        m[2] = i8
+        m[8] = i2
+        m[6] = i9
+        m[9] = i6        
         
-        m[12] = ( m[0] * -i[12] + 
-                  m[4] * -i[13] + 
-                  m[8] * -i[14] )
+        m[12] = ( m[0] * -i12 + 
+                  m[4] * -i13 + 
+                  m[8] * -i14 )
         
-        m[13] = ( m[1] * -i[12] +
-                  m[5] * -i[13] + 
-                  m[9] * -i[14] )
+        m[13] = ( m[1] * -i12 +
+                  m[5] * -i13 + 
+                  m[9] * -i14 )
         
-        m[14] = ( m[2] * -i[12] +
-                  m[6] * -i[13] + 
-                  m[10] * -i[14] )        
+        m[14] = ( m[2] * -i12 +
+                  m[6] * -i13 + 
+                  m[10] * -i14 )        
         
         return ret
      
      
     def get_inverse(self):
         
-        ret = self.copy()
-        m = ret._m
+        """Returns the inverse (matrix with the opposite effect) of this
+        matrix."""
+        
+        ret = self.__new__(self.__class__, object)
         i = self._m        
         
+        i0,  i1,  i2,  i3, \
+        i4,  i5,  i6,  i7, \
+        i8,  i9,  i10, i11, \
+        i12, i13, i14, i15 = i
+        
         negpos=[0., 0.]
-        temp = i[0] * i[5] * i[10]        
-        negpos[temp>0.]+= temp
+        temp = i0 * i5 * i10        
+        negpos[temp > 0.] += temp
         
-        temp = i[1] * i[6] * i[8]
-        negpos[temp>0.]+= temp
+        temp = i1 * i6 * i8
+        negpos[temp > 0.] += temp
         
-        temp = i[2] * i[4] * i[9]
-        negpos[temp>0.]+= temp
+        temp = i2 * i4 * i9
+        negpos[temp > 0.] += temp
         
-        temp = -i[2] * i[5] * i[8]
-        negpos[temp>0.]+= temp
+        temp = -i2 * i5 * i8
+        negpos[temp > 0.] += temp
         
-        temp = -i[1] * i[4] * i[10]
-        negpos[temp>0.]+= temp
+        temp = -i1 * i4 * i10
+        negpos[temp > 0.] += temp
         
-        temp = -i[0] * i[6] * i[9]
-        negpos[temp>0.]+= temp
+        temp = -i0 * i6 * i9
+        negpos[temp > 0.] += temp
         
         det_1 = negpos[0]+negpos[1]
                 
-        if (det_1 == 0.) or (abs(det_1 / (negpos[1] - negpos[0])) < (2. * 0.00000000000000001) ):
+        if (det_1 == 0.) or (abs(det_1 / (negpos[1] - negpos[0])) < \
+                             (2. * 0.00000000000000001) ):
             raise Matrix44Error("This Matrix44 can not be inverted")
         
         det_1 = 1. / det_1
-        m[0] =   ( i[5] * i[10] -
-                   i[6] * i[9] ) * det_1
-
-        m[4] = - ( i[4] * i[10] -
-                   i[6] * i[8] ) * det_1
-
-        m[8] =   ( i[4] * i[9] -
-                   i[5] * i[8] ) * det_1
-
-        m[1] = - ( i[1] * i[10] -
-                   i[2] * i[9] ) * det_1
-
-        m[5] =   ( i[0] * i[10] -
-                   i[2] * i[8] ) * det_1
-
-        m[9] = - ( i[0] * i[9] -
-                   i[1] * i[8] ) * det_1
-
-        m[2] =   ( i[1] * i[6] -
-                   i[2] * i[5] ) * det_1
-
-        m[6] = - ( i[0] * i[6] -
-                   i[2] * i[4] ) * det_1
-
-        m[10] =   ( i[0] * i[5] -
-                    i[1] * i[4] ) * det_1
-
-        m[12] = - ( i[12] * m[0] +
-                    i[13] * m[4] +
-                    i[14] * m[8] )
-        m[13] = - ( i[12] * m[1] +
-                    i[13] * m[4] +
-                    i[14] * m[9] )
-        m[14] = - ( i[12] * m[2] +
-                    i[13] * m[6] +
-                    i[14] * m[10] )
         
-        m[3] = m[7] = m[11] = 0.
-        m[15] = 1.
+        ret._m = [ (i5*i10 - i6*i9)*det_1,
+                  -(i1*i10 - i2*i9)*det_1,
+                   (i1*i6 - i2*i5 )*det_1,
+                   0.0,
+                  -(i4*i10 - i6*i8)*det_1,
+                   (i0*i10 - i2*i8)*det_1,
+                  -(i0*i6 - i2*i4)*det_1,
+                   0.0,
+                  (i4*i9 - i5*i8 )*det_1,
+                  -(i0*i9 - i1*i8)*det_1,
+                   (i0*i5 - i1*i4)*det_1,
+                   0.0,
+                   0.0, 0.0, 0.0, 1.0 ]
+
+        m = ret._m
+        m[12] = - ( i12 * m[0] + i13 * m[4] + i14 * m[8] )
+        m[13] = - ( i12 * m[1] + i13 * m[5] + i14 * m[9] )
+        m[14] = - ( i12 * m[2] + i13 * m[6] + i14 * m[10] )
         
         return ret
 
@@ -898,26 +1000,25 @@ class Matrix44(object):
         """
         
         if forward is not None:
-            self.translation = Vector3(self.translation) + forward
+            self.translate = Vector3(self.translate) + forward
         if right is not None:
             self.right = Vector3(self.right) + right
         if up is not None:
             self.up = Vector3(self.up) + up
     
-    
-def setup_mul():
-    a = Matrix44()
-    b = Matrix44()
-        
-def mul():
-    a*= b 
-     
+         
      
 def test():    
     
     m = Matrix44.xyz_rotation(radians(45), radians(20), radians(0))
         
     print m
+    
+    print "--Transpose"
+    
+    print m.get_transpose()
+    
+    print "--"
 
     print m.get_row(2)
 
@@ -945,7 +1046,7 @@ def test():
     
     
     print m.inverse_transform(vt)
-    m[1,2]=3.    
+    m[1,2] = 3.    
 
     print
     

@@ -3,5 +3,10 @@ __all__ = [
 'vector3',
 'util',
 'sphere',
-'matrix',
-'color']
+'matrix44',
+'color',
+'gametime'
+]
+
+
+__version__ = "0.0.1"

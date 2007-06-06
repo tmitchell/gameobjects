@@ -3,7 +3,7 @@ from util import format_number
 
 class Vector2(object):
     
-    __slots__ = ('_x', '_y')
+    __slots__ = ('_v')
     
     def __init__(self, x=0., y=0.):
         """Initialise a vector
@@ -13,33 +13,32 @@ class Vector2(object):
         
         """
         if hasattr(x, "__getitem__"):
-            self._x = float(x[0])
-            self._y = float(x[1])
+            x, y = x
+            self._v = [float(x), float(y)]
         else:
-            self._x = float(x)
-            self._y = float(y)
+            self._v = [float(x), float(y)]
     
     def _get_length(self):
-        return sqrt(self._x*self._x+self._y*self._y)
+        x, y = self._v
+        return sqrt(x*x + y*y)
     def _set_length(self, length):
         try:
-            l = length / sqrt(self._x*self._x+self._y*self._y)
+            x, y = self._v
+            l = length / sqrt(x*x +y*y)
         except ZeroDivisionError:
-            self._x = 0.
-            self._y = 0.            
+            self._v = [0., 0.]
             return self
-            
-        self._x *= l
-        self._y *= l
-        self._z *= l
+        _v = self._v
+        _v[0] = x*l
+        _v[1] = y*l
+        
         
     length = property(_get_length, _set_length, None, "Length of the vector")
     
     @classmethod
     def from_floats(cls, x, y):
         vec = cls.__new__(cls, object)
-        vec._x = x
-        vec._y = y
+        vec._v = [x, y]        
         return vec
         
     @classmethod
@@ -48,10 +47,9 @@ class Vector2(object):
         iterable -- An iterable of at least 2 numeric values
         
         """
-        it = iter(iterable)
-        vec = cls.__new__(cls, object)
-        vec._x = float(it.next())
-        vec._y = float(it.next())
+        next = iter(iterable).next
+        vec = cls.__new__(cls, object)        
+        vec._v = [float(next()), float(next())]        
         return vec
 
         
@@ -63,24 +61,29 @@ class Vector2(object):
         
         """
         v = cls.__new__(cls, object)
-        v._x = p2[0] - p1[0]
-        v._y = p2[1] - p1[1]
+        x, y = p1
+        xx, yy = p2
+        v._v = [float(xx-x), float(yy-y)]        
         return v
     
     def copy(self):
         """Returns a copy of this object."""
-        return Vector2.from_floats(self._x, self._y)
+        vec = self.__new__(self.__class__, object)
+        vec._v = self._v[:]
+        return vec
         
     def get_x(self):
-        return self._x
+        return self._v[0]
     def set_x(self, x):
-        self._x = float(x)
+        assert isinstance(x, float), "Must be a float"
+        self._v[0] = x
     x = property(get_x, set_x, None, "x component.")
     
     def get_y(self):
-        return self._y
+        return self._v[1]
     def set_y(self, y):
-        self._y = float(y)
+        assert isinstance(x, float), "Must be a float"
+        self._v[1] = y
     y = property(get_y, set_y, None, "y component.")
         
     u = property(get_x, set_y, None, "u component (alias for x).")
@@ -88,16 +91,15 @@ class Vector2(object):
         
     def __str__(self):
         
-        return "(%s, %s)" % (format_number(self._x), format_number(self._y))
+        return "(%s, %s)" % (format_number(self.x), format_number(self.y))
     
     def __repr__(self):
         
-        return "Vector2(%s, %s)" % (self._x, self._y)
+        return "Vector2(%s, %s)" % (self.x, self.y)
         
     def __iter__(self):
         
-        yield self._x
-        yield self._y
+        return iter(self._v[:])
         
     def __len__(self):
         
@@ -106,76 +108,110 @@ class Vector2(object):
     
     def __getitem__(self, index):
         """Gets a component as though the vector were a list."""
-        if index == 0:
-            return self._x
-        elif index == 1:
-            return self._y
-        raise IndexError, "There are 2 values in this object, index should be 0 or 1"    
+        try:
+            return self._v[index]
+        except IndexError:        
+            raise IndexError, "There are 2 values in this object, index should be 0 or 1"    
             
     def __setitem__(self, index, value):
         """Sets a component as though the vector were a list."""
         
-        if index == 0:
-            self._x = float(value)
-        elif index == 1:
-            self._y = float(value)
-        raise IndexError, "There are 2 values in this object, index should be 0 or 1!"        
+        assert isinstance(value, float), "Must be a float"
+        try:
+            self._v[index] = value
+        except IndexError:        
+            raise IndexError, "There are 2 values in this object, index should be 0 or 1!"        
+     
      
     def __eq__(self, rhs):
-        
-        return self._x == rhs._x and self._y == rhs._y
+        x, y = self._v
+        xx, yy = rhs
+        return x == xx and y == yy
 
     def __ne__(self, rhs):
+        x, y = self._v
+        xx, yy, = rhs
+        return x != xx or y != yy
+    
+    def __hash__(self):
         
-        return self._x != rhs._x or self._y != rhs._y
+        x, y = self._v
+        return hash((x, y))
 
     def __add__(self, rhs):
-        
-        return Vector2.from_floats(self._x+rhs[0], self._y+rhs[1])
+        x, y = self._v
+        xx, yy = rhs
+        return Vector2.from_floats(x+xx, y+yy)
         
         
     def __iadd__(self, rhs):
-        
-        self._x += rhs[0]
-        self._y += rhs[1]
+        x, y = self._v
+        xx, yy = rhs
+        self._v[0] = x + xx
+        self._v[1] = y + yy
         return self
         
+    def __radd__(self, lhs):
+        x, y = self._v
+        xx, yy = lhs
+        return self.from_floats(x+xx, y+yy)
         
     def __sub__(self, rhs):
+        x, y = self._v
+        xx, yy = rhs
+        return Vector2.from_floats(x-xx, y-yy)
         
-        return Vector2.from_floats(self._x-rhs[0], self._y-rhs[1])
-        
+    def __rsub__(self, lhs):
+        x, y = self._v
+        xx, yy = lhs
+        return self.from_floats(xx-x, yy-y)
         
     def _isub__(self, rhs):
         
-        self._x -= rhs[0]
-        self._y -= rhs[1]
+        xx, yy = rhs
+        self._v[0] -= xx
+        self._v[1] -= xx
         return self
         
         
     def __mul__(self, rhs):
-        """Return the result of multiplying this vector with a scalar or a vector-list object."""        
-        if hasattr(rhs, "__getitem__"):
-            return Vector2.from_floats(self._x*rhs[0], self._y*rhs[1])
+        """Return the result of multiplying this vector with a scalar or a vector-list object."""
+        x, y = self._v
+        if hasattr(rhs, "__getitem__"):            
+            xx, yy = rhs
+            return Vector2.from_floats(x*xx, y*yy)
         else:
-            return Vector2.from_floats(self._x*rhs, self._y*rhs)
+            return Vector2.from_floats(x*rhs, y*rhs)
             
             
-    def __rmul__(self, rhs):
+    def __imul__(self, rhs):
         """Multiplys this vector with a scalar or a vector-list object.""" 
         if hasattr(rhs, "__getitem__"):
-            self._x *= rhs[0]
-            self._y *= rhs[1]            
+            xx, yy = rhs
+            self._x *= xx
+            self._y *= yy            
         else:
             self._x *= rhs
             self._y *= rhs
         return self
         
+    def __rmul__(self, lhs):
+        
+        x, y = self._v
+        if hasattr(lhs, "__getitem__"):
+            xx, yy = lhs
+        else:
+            xx = lhs
+            yy = lhs
+        return self.from_floats(x*xx, y*yy)
+        
         
     def __div__(self, rhs):
-        """Return the result of dividing this vector by a scalar or a vector-list object."""        
+        """Return the result of dividing this vector by a scalar or a vector-list object."""
+        x, y = self._v
         if hasattr(rhs, "__getitem__"):
-            return Vector2.from_floats(self._x/rhs[0], self._y/rhs[1])
+            xx, yy, = rhs
+            return Vector2.from_floats(x/xx, y/yy)
         else:
             return Vector2.from_floats(self._x/rhs, self._y/rhs)
             
@@ -183,55 +219,84 @@ class Vector2(object):
     def __idiv__(self, rhs):
         """Divides this vector with a scalar or a vector-list object."""
         if hasattr(rhs, "__getitem__"):
-            self._x /= rhs[0]
-            self._y /= rhs[1]            
+            xx, yy = rhs
+            self._x /= xx
+            self._y /= yy            
         else:
             self._x /= rhs
-            self._y /= rhs
+            self._y /= rhs        
         return self
        
        
     def __neg__(self):
         """Return the negation of this vector."""
-        return Vector2.from_floats(-self._x, -self._y)
+        x, y = self._v
+        return Vector2.from_floats(-x, -y)
+    
+    def __pos__(self):
+        
+        return self.copy()
+    
+    def __nonzero__(self):
+        
+        x, y = self._v
+        return x and y
     
     def __call__(self, keys):
         """Used to swizzle a vector.
         keys -- A string containing a list of component names
         i.e. vec = Vector(1, 2)
-        vec('yx') --> (2, 1)"""
-        return tuple( getattr(self, "_"+key) for key in keys )
+        vec('yx') --> (2, 1)
+        
+        """        
+        
+        ord_x = ord('x')
+        _v = self._v
+        return tuple( _v[ord(c) - ord_x] for c in keys )
 
 
     def as_tuple(self):
         """Converts this vector to a tuple."""
-        return (self._x, self._y)
+        return tuple(self._v)
 
 
     def get_length(self):
         """Returns the length of this vector."""
-        return sqrt(self._x*self._x + self._y*self._y)
+        x, y = self._v
+        return sqrt(x*x +y*y)
     get_magnitude = get_length
         
         
     def normalise(self):
         """Normalises this vector."""
-        length = self.get_length()
-        if length:
-            self._x /= length
-            self._y /= length        
+        x, y = self._v
+        l = sqrt(x*x +y*y)
+        try:
+            _v = self._v
+            _v[0] /= l
+            _v[1] /= l
+        except ZeroDivisionError:
+            _v[0] = 0.
+            _v[1] = 0.
+        return self
     normalize = normalise
     
     def get_normalised(self):
-        length = self.get_length()
-        return Vector2(self._x / length, self._y / length)
+        x, y = self._v
+        l = sqrt(x*x +y*y)
+        return Vector2.from_floats(x/l, y/l)
     get_normalized = get_normalised
             
     def get_distance_to(self, p):
         """Returns the distance to a point.
         
         p -- A Vector2 or list-like object with at least 2 values."""
-        return sqrt( (self._x - p[0])**2 + (self._y - p[1])**2 );    
+        x = self._x
+        y = self._y
+        xx, yy = p
+        dx = xx-x
+        dy = yy-y
+        return sqrt( dx*dx + dy*dy )
 
 if __name__ == "__main__":
     
