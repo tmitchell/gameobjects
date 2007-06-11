@@ -289,6 +289,31 @@ class Vector3(object):
         ox, oy, oz = lhs
         return self.from_floats(ox-x, oy-y, oz-z)
         
+    def scalar_mul(self, scalar):
+        
+        v = self._v
+        v[0] *= scalar
+        v[1] *= scalar
+        v[2] *= scalar
+        
+    def vector_mul(self, vector):
+        
+        x, y, z = vector
+        v= self._v
+        v[0] *= x
+        v[1] *= y
+        v[2] *= z
+        
+    def get_scalar_mul(self, scalar):
+        
+        x, y, z = self.scalar
+        return self.from_floats(x*scalar, y*scalar, z*scalar)
+    
+    def get_vector_mul(self, vector):
+        
+        x, y, z = self._v
+        xx, yy, zz = vector
+        return self.from_floats(x * xx, y * yy, z * zz)
         
     def __mul__(self, rhs):
         """Return the result of multiplying this vector by another vector, or
@@ -373,7 +398,32 @@ class Vector3(object):
             return self.from_floats(ox/x, oy/y, oz/z)
         else:
             return self.from_floats(lhs/x, lhs/y, lhs/z)
-            
+    
+    def scalar_div(self, scalar):
+        
+        v = self._v
+        v[0] /= scalar
+        v[1] /= scalar
+        v[2] /= scalar
+        
+    def vector_div(self, vector):
+        
+        x, y, z = vector
+        v= self._v
+        v[0] /= x
+        v[1] /= y
+        v[2] /= z
+        
+    def get_scalar_div(self, scalar):
+        
+        x, y, z = self.scalar
+        return self.from_floats(x / scalar, y / scalar, z / scalar)
+    
+    def get_vector_div(self, vector):
+        
+        x, y, z = self._v
+        xx, yy, zz = vector
+        return self.from_floats(x / xx, y / yy, z / zz) 
             
     def __neg__(self):
         """Returns the negation of this vector (a vector pointing in the opposite direction.
