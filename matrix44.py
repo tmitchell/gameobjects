@@ -28,7 +28,7 @@ class Matrix44(object):
                   (0.0 ,0.0 ,1.0 ,0.0),
                   (0.0 ,0.0 ,0.0 ,1.0) )
         
-    __slots__ = ['_m']
+    __slots__ = ('_m',)
     
     def __init__(self, *args):
         """If no parameteres are given, the Matrix44 is initialised to the identity Matrix44.
@@ -290,7 +290,7 @@ class Matrix44(object):
         """
         
         m = cls.__new__(cls, object)
-        return m.make_persepctive_projection( left,
+        return m.make_perspective_projection( left,
                                               right,
                                               top,
                                               bottom,
@@ -603,6 +603,21 @@ class Matrix44(object):
                  x * m[1] + y * m[5] + z * m[9]  + m[13],
                  x * m[2] + y * m[6] + z * m[10] + m[14] )
         
+        
+    def transform4(self, v):
+        """Transforms a Vector3 and returns the result as a tuple.
+        
+        v -- Vector to transform
+        
+        """
+        
+        m = self._m        
+        x, y, z, w = v
+        return ( x * m[0] + y * m[4] + z * m[8]  + w * m[12],
+                 x * m[1] + y * m[5] + z * m[9]  + w * m[13],
+                 x * m[2] + y * m[6] + z * m[10] + w * m[14] )
+    
+    
     def iter_transform_vec3(self, points):
         
         """Transforms a sequence of points, and yields the result as Vector3s
@@ -640,7 +655,28 @@ class Matrix44(object):
             yield ( x * m_0 + y * m_4 + z * m_8  + m_12,
                     x * m_1 + y * m_5 + z * m_9  + m_13,
                     x * m_2 + y * m_6 + z * m_10 + m_14 )
+            
+    iter_transform3 = iter_transform        
+    
         
+    def iter_transform4(self, points):
+        
+        """Transforms a sequence of points and yields the result as tuples.
+        
+        points -- A sequence of vectors
+        
+        """
+        
+        m_0, m_1, m_2, m_3, \
+        m_4, m_5, m_6, m_7, \
+        m_8, m_9, m_10, m_11, \
+        m_12, m_13, m_14, m_15 = self._m
+        
+        for x, y, z, w in points:            
+            
+            yield ( x * m_0 + y * m_4 + z * m_8  + w * m_12,
+                    x * m_1 + y * m_5 + z * m_9  + w * m_13,
+                    x * m_2 + y * m_6 + z * m_10 + w * m_14 )
         
     def rotate_vec3(self, v):        
         """Rotates a Vector3 and returns the result.
@@ -698,6 +734,7 @@ class Matrix44(object):
         """Makes a copy of another Matrix44."""
         
         self._m = other._m[:]
+        return self
         
             
     def make_scale(self, scale_x, scale_y= None, scale_z= None):
@@ -836,6 +873,7 @@ class Matrix44(object):
                    0.,                        (2.*near)/(top-bottom),    0.,                          0.,
                    (right+left)/(right-left), (top+bottom)/(top-bottom), -((far+near)/(far-near)),   -1.,
                    0.,                        0.,                        -((2.*far*near)/(far-near)), 0.]
+        return self
     
     
     def make_perspective_projection_fov(self, fov, aspect, near, far):
@@ -851,11 +889,18 @@ class Matrix44(object):
         assert fov < pi, "The field of view should be less than pi radians"\
         " (180 degrees)"
         
-        right = tan( fov/2. ) * near
-        left = - right
-        top = right / aspect
-        bottom = -top
+        range = near*tan(fov/2.);
+        left = -range*aspect
+        right = range*aspect
+        bottom = -range
+        top = range
+        
+        #right = tan( fov/2. ) * near
+        #left = - right
+        #top = right / aspect
+        #bottom = -top
         self.make_perspective_projection(left, right, bottom, top, near, far)
+        return self
         
         
     def transpose(self):
@@ -1029,7 +1074,7 @@ def test():
     
     #print (10, 20, 30) + Vector3(1,2,3)
     
-    m.translate = (m.translate) + Vector3(10, 20, 30)
+    m.translate = (m.translate[:3]) + Vector3(10, 20, 30)
     
     print m
     

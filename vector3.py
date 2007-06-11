@@ -5,7 +5,7 @@ from util import format_number
 
 class Vector3(object):
     
-    __slots__ = ('_v')    
+    __slots__ = ('_v',)    
     
        
     def __init__(self, *args):
@@ -24,26 +24,6 @@ class Vector3(object):
         else:
             raise ValueError("Vector3.__init__ takes 0, 1 or 3 parameters")
 
-    def _get_0(self):   
-        return self._v[0]
-    
-    def _get_1(self):
-        return self._v[1]
-    
-    def _get_2(self):
-        return self._v[2]
-    
-    def _set_0(self, value):
-        self._v[0] = value
-        
-    def _set_1(self, value):
-        self._v[1] = value
-        
-    def _set_2(self, value):
-        self._v[2] = value
-        
-    _getters = (_get_0, _get_1, _get_2)
-    _setters = (_set_0, _set_1, _set_2)
        
     @classmethod
     def from_points(cls, p1, p2):
@@ -56,14 +36,14 @@ class Vector3(object):
         return v        
        
     @classmethod
-    def from_floats(cls, *args):
+    def from_floats(cls, x, y, z):
         """Creates a Vector3 from individual float values.
         Warning: There is no checking for efficiency here: x, y, z _must_ be
         floats.
         
         """
         v = cls.__new__(cls, object)
-        v._v = list(args)
+        v._v = [x, y, z]
         return v
     
 
@@ -154,12 +134,16 @@ class Vector3(object):
             
     def __str__(self):
         
-        return "(%s, %s, %s)" % (format_number(self._v[0]), format_number(self._v[1]), format_number(self._v[2]))
+        x, y, z = self._v
+        return "(%s, %s, %s)" % (format_number(x),
+                                 format_number(y),
+                                 format_number(z))
         
         
     def __repr__(self):
         
-        return "Vector3(%s, %s, %s)" % (self._v[0], self._v[1], self._v[2])        
+        x, y, z = self._v
+        return "Vector3(%s, %s, %s)" % (x, y, z)        
         
         
     def __len__(self):
@@ -167,17 +151,27 @@ class Vector3(object):
         return 3
     
     def __iter__(self):
-                
-        return iter(self._v)
+        """Iterates the components in x, y, z order."""
+        return iter(self._v[:])
         
     def __getitem__(self, index):
-       
+        """Retrieves a component, given its index.
+        
+        index -- 0, 1 or 2 for x, y or z
+        
+        """
         try:
             return self._v[index]
         except IndexError:
             raise IndexError, "There are 3 values in this object, index should be 0, 1 or 2!"                        
         
     def __setitem__(self, index, value):
+        """Sets a component, given its index.
+        
+        index -- 0, 1 or 2 for x, y or z
+        value -- New (float) value of component
+        
+        """
         
         assert isinstance(value, float), "Must be a float"
         try:            
@@ -188,23 +182,39 @@ class Vector3(object):
 
     def __eq__(self, rhs):
         
+        """Test for equality
+        
+        rhs -- Vector or sequence of 3 values
+        
+        """
+        
         x, y, z = self._v
         xx, yy, zz = rhs
         return x==xx and y==yy and z==zz
     
     def __ne__(self, rhs):
         
+        """Test of inequality
+        
+        rhs -- Vector or sequenece of 3 values
+        
+        """
+        
         x, y, z = self._v
         xx, yy, zz = rhs
         return x!=xx or y!=yy or z!=zz
     
     def __hash__(self):
-        
-        x, y, z = self._v
-        return hash((x, y, z))
+                
+        return hash(tuple(self._v))
 
     def __add__(self, rhs):
-        """Returns the result of adding a vector (or collection of 3 numbers) from this vector."""
+        """Returns the result of adding a vector (or collection of 3 numbers)
+        from this vector.
+        
+        rhs -- Vector or sequence of 2 values
+        
+        """
         
         x, y, z = self._v
         ox, oy, oz = rhs        
@@ -212,52 +222,82 @@ class Vector3(object):
         
         
     def __iadd__(self, rhs):
-        """Adds another vector (or a collection of 3 numbers) to this vector."""
-        x, y, z = self._v
+        """Adds another vector (or a collection of 3 numbers) to this vector.
+        
+        rhs -- Vector or sequence of 2 values
+        
+        """        
         ox, oy, oz = rhs
         v = self._v
-        v[0] = x+ox
-        v[1] = y+oy
-        v[2] = z+oz        
+        v[0] += ox
+        v[1] += oy
+        v[2] += oz        
         return self
         
         
     def __radd__(self, lhs):
         
+        """Adds vector to this vector (right version)
+        
+        lhs -- Left hand side vector or sequence
+        
+        """
+        
         x, y, z = self._v
-        ox, oy, oz = lhs[:3]        
+        ox, oy, oz = lhs        
         return self.from_floats(x+ox, y+oy, z+oz)
     
     
         
     def __sub__(self, rhs):
-        """Returns the result of subtracting a vector (or collection of 3 numbers) from this vector."""
+        """Returns the result of subtracting a vector (or collection of
+        3 numbers) from this vector.
+        
+        rhs -- 3 values
+        
+        """
         
         x, y, z = self._v
-        ox, oy, oz = rhs[:3]
+        ox, oy, oz = rhs
         return self.from_floats(x-ox, y-oy, z-oz)
         
         
     def _isub__(self, rhs):
-        """Subtracts another vector (or a collection of 3 numbers) from this vector."""
+        """Subtracts another vector (or a collection of 3 numbers) from this
+        vector.
         
-        x, y, z = self._v
+        rhs -- Vector or sequence of 3 values
+        
+        """
+                
         ox, oy, oz = rhs
         v = self._v
-        v[0] = x-ox
-        v[1] = y-oy
-        v[2] = z-oz
+        v[0] -= ox
+        v[1] -= oy
+        v[2] -= oz
         return self
         
     def __rsub__(self, lhs):
         
+        """Subtracts a vector (right version)
+        
+        lhs -- Left hand side vector or sequence
+        
+        """
+        
         x, y, z = self._v
-        ox, oy, oz = lhs[:3]
+        ox, oy, oz = lhs
         return self.from_floats(ox-x, oy-y, oz-z)
         
         
     def __mul__(self, rhs):
-        """Return the result of multiplying this vector by another vector, or a scalar (single number)."""
+        """Return the result of multiplying this vector by another vector, or
+        a scalar (single number).
+        
+        
+        rhs -- Vector, sequence or single value.
+        
+        """
         
         x, y, z = self._v
         if hasattr(rhs, "__getitem__"):
@@ -268,19 +308,23 @@ class Vector3(object):
             
         
     def __imul__(self, rhs):
-        """Multiply this vector by another vector, or a scalar (single number).""" 
+        """Multiply this vector by another vector, or a scalar
+        (single number).
+        
+        rhs -- Vector, sequence or single value.
+        
+        """ 
             
         v = self._v    
         if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs            
-            v[0] = x * ox
-            v[1] = y * oy
-            v[2] = z * oz
-        else:
-            x, y, z = v
-            v[0] = x * rhs
-            v[1] = y * rhs
-            v[2] = z * rhs
+            v[0] *= ox
+            v[1] *= oy
+            v[2] *= oz
+        else:            
+            v[0] *= rhs
+            v[1] *= rhs
+            v[2] *= rhs
                     
         return self
         
@@ -309,16 +353,14 @@ class Vector3(object):
         """Divide this vector by another vector, or a scalar (single number)."""
         
         v = self._v
-        if hasattr(rhs, "__getitem__"):
-            ox, oy, oz = rhs
-            v[0] = x/ox
-            v[1] = y/oy
-            v[2] = z/oz            
-        else:
-            x, y, z = v
-            v[0] = x/rhs
-            v[1] = y/rhs
-            v[2] = z/rhs 
+        if hasattr(rhs, "__getitem__"):            
+            v[0] /= ox
+            v[1] /= oy
+            v[2] /= oz            
+        else:            
+            v[0] /= rhs
+            v[1] /= rhs
+            v[2] /= rhs 
             
         return self
             
@@ -363,8 +405,8 @@ class Vector3(object):
         
         """
         ord_x = ord('x')
-        _v = self._v
-        return tuple( _v[ord(c)-ord_x] for c in keys )        
+        v = self._v
+        return tuple( v[ord(c)-ord_x] for c in keys )        
              
              
     def as_tuple(self):
@@ -381,17 +423,16 @@ class Vector3(object):
         scale -- Value to scale the vector by
         
         """
-        v = self._v
-        x, y, z = v
+        v = self._v        
         if hasattr(rhs, "__getitem__"):
             ox, oy, oz = rhs
-            v[0] = x*ox
-            v[1] = y*oy
-            v[2] = z*oz            
+            v[0] *= ox
+            v[1] *= oy
+            v[2] *= oz            
         else:         
-            v[0] = x*rhs
-            v[1] = y*rhs
-            v[2] = z*rhs            
+            v[0] *= rhs
+            v[1] *= rhs
+            v[2] *= rhs            
                     
         return self
         
@@ -408,17 +449,17 @@ class Vector3(object):
         
         new_length -- The new length of the vector.
         
-        """        
-        try:
-            x, y, z = self._v
-            l = new_length / sqrt(x*x + y*y + z*z)
-        except ZeroDivisionError:
-            self._v[0] = 0.0
-            self._v[1] = 0.0
-            self._v[2] = 0.0
-            return self
-            
+        """
         v = self._v
+        try:
+            x, y, z = v
+            l = new_length / sqrt(x*x + y*y + z*z)
+        except ZeroDivisionError:            
+            v[0] = 0.0
+            v[1] = 0.0
+            v[2] = 0.0
+            return self
+                    
         v[0] = x*l
         v[1] = y*l
         v[2] = z*l        
@@ -435,8 +476,8 @@ class Vector3(object):
         ax, ay, az = self._v
         bx, by, bz = p
         dx = ax-bx
-        dy = bx-by
-        dz = cx-cy
+        dy = ay-by
+        dz = az-bz
         return sqrt( dx*dx + dy*dy + dz*dz )    
         
         
@@ -449,19 +490,24 @@ class Vector3(object):
         ax, ay, az = self._v
         bx, by, bz = p
         dx = ax-bx
-        dy = bx-by
-        dz = cx-cy
-        return sqrt( dx*dx + dy*dy + dz*dz )    
+        dy = ay-by
+        dz = az-bz
+        return dx*dx + dy*dy + dz*dz
         
         
     def normalise(self):
         """Scales the vector to be length 1."""
-        x, y, z = self._v        
-        l = sqrt(x*x + y*y + z*z)
         v = self._v
-        v[0] = x/l
-        v[1] = y/l
-        v[2] = z/l
+        x, y, z = v        
+        l = sqrt(x*x + y*y + z*z)        
+        try:
+            v[0] /= l
+            v[1] /= l
+            v[2] /= l
+        except ZeroDivisionError:
+            v[0] = 0.0
+            v[1] = 0.0
+            v[2] = 0.0
         return self        
     normalize = normalise
         
@@ -507,16 +553,42 @@ class Vector3(object):
                                  z*bx - bz*x,
                                  x*by - bx*y )
 
+    def cross_tuple(self, other):
+        
+        """Returns the cross product of this vector with another, as a tuple.
+        This avoids the Vector3 construction if you don't need it.
+        
+        other -- A vector or tuple
+        
+        """
+        
+        x, y, z = self._v
+        bx, by, bz = other
+        return ( y*bz - by*z,
+                 z*bx - bz*x,
+                 x*by - bx*y )
     
 
 def distance3d_squared(p1, p2):
     
-    return (p2[0]-p1[0])**2 + (p2[1]-p1[1])**2 + (p2[2]-p1[2])**2
+    x, y, z = p1
+    xx, yy, zz = p2
+    dx = x - xx
+    dy = y - yy
+    dz = z - zz
+    
+    return dx*dx + dy*dy +dz*dz
 
 
 def distance3d(p1, p2):
     
-    return sqrt( (p2[0]-p1[0])**2 + (p2[1]-p1[1])**2 + (p2[2]-p1[2])**2 )
+    x, y, z = p1
+    xx, yy, zz = p2
+    dx = x - xx
+    dy = y - yy
+    dz = z - zz
+    
+    return sqrt(dx*dx + dy*dy +dz*dz)
 
 def centre_point3d(points):
     

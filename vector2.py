@@ -3,7 +3,7 @@ from util import format_number
 
 class Vector2(object):
     
-    __slots__ = ('_v')
+    __slots__ = ('_v',)
     
     def __init__(self, x=0., y=0.):
         """Initialise a vector
@@ -22,17 +22,16 @@ class Vector2(object):
         x, y = self._v
         return sqrt(x*x + y*y)
     def _set_length(self, length):
+        v = self._v
         try:
-            x, y = self._v
+            x, y = v
             l = length / sqrt(x*x +y*y)
         except ZeroDivisionError:
-            self._v = [0., 0.]
-            return self
-        _v = self._v
-        _v[0] = x*l
-        _v[1] = y*l
-        
-        
+            v[0] = 0.0
+            v[1] = 0.0
+            return self        
+        v[0] *= l
+        v[1] *= l        
     length = property(_get_length, _set_length, None, "Length of the vector")
     
     @classmethod
@@ -91,11 +90,13 @@ class Vector2(object):
         
     def __str__(self):
         
-        return "(%s, %s)" % (format_number(self.x), format_number(self.y))
+        x, y = self._v
+        return "(%s, %s)" % (format_number(x), format_number(y))
     
     def __repr__(self):
         
-        return "Vector2(%s, %s)" % (self.x, self.y)
+        x, y = self._v
+        return "Vector2(%s, %s)" % (x, y)
         
     def __iter__(self):
         
@@ -134,9 +135,8 @@ class Vector2(object):
         return x != xx or y != yy
     
     def __hash__(self):
-        
-        x, y = self._v
-        return hash((x, y))
+                
+        return hash(tuple(self._v))
 
     def __add__(self, rhs):
         x, y = self._v
@@ -144,11 +144,11 @@ class Vector2(object):
         return Vector2.from_floats(x+xx, y+yy)
         
         
-    def __iadd__(self, rhs):
-        x, y = self._v
+    def __iadd__(self, rhs):        
         xx, yy = rhs
-        self._v[0] = x + xx
-        self._v[1] = y + yy
+        v = self._v
+        v[0] += xx
+        v[1] += yy
         return self
         
     def __radd__(self, lhs):
@@ -169,8 +169,9 @@ class Vector2(object):
     def _isub__(self, rhs):
         
         xx, yy = rhs
-        self._v[0] -= xx
-        self._v[1] -= xx
+        v = self._v
+        v[0] -= xx
+        v[1] -= yy
         return self
         
         
@@ -188,11 +189,13 @@ class Vector2(object):
         """Multiplys this vector with a scalar or a vector-list object.""" 
         if hasattr(rhs, "__getitem__"):
             xx, yy = rhs
-            self._x *= xx
-            self._y *= yy            
+            v = self._v
+            v[0] *= xx
+            v[1] *= yy            
         else:
-            self._x *= rhs
-            self._y *= rhs
+            v = self._v
+            v[0] *= rhs
+            v[1] *= rhs
         return self
         
     def __rmul__(self, lhs):
@@ -213,20 +216,31 @@ class Vector2(object):
             xx, yy, = rhs
             return Vector2.from_floats(x/xx, y/yy)
         else:
-            return Vector2.from_floats(self._x/rhs, self._y/rhs)
+            return Vector2.from_floats(x/rhs, y/rhs)
             
             
     def __idiv__(self, rhs):
         """Divides this vector with a scalar or a vector-list object."""
         if hasattr(rhs, "__getitem__"):
             xx, yy = rhs
-            self._x /= xx
-            self._y /= yy            
+            v = self._v
+            v[0] /= xx
+            v[1] /= yy            
         else:
-            self._x /= rhs
-            self._y /= rhs        
+            v = self._v
+            v[0] /= rhs
+            v[1] /= rhs        
         return self
-       
+    
+    def __rdiv__(self, lhs):
+        
+        x, y = self._v
+        if hasattr(lhs, "__getitem__"):
+            xx, yy = lhs
+        else:
+            xx = lhs
+            yy = lhs
+        return self.from_floats(xx/x, yy/x)
        
     def __neg__(self):
         """Return the negation of this vector."""
@@ -251,8 +265,8 @@ class Vector2(object):
         """        
         
         ord_x = ord('x')
-        _v = self._v
-        return tuple( _v[ord(c) - ord_x] for c in keys )
+        v = self._v
+        return tuple( v[ord(c) - ord_x] for c in keys )
 
 
     def as_tuple(self):
@@ -269,15 +283,15 @@ class Vector2(object):
         
     def normalise(self):
         """Normalises this vector."""
-        x, y = self._v
+        v = self._v
+        x, y = v
         l = sqrt(x*x +y*y)
-        try:
-            _v = self._v
-            _v[0] /= l
-            _v[1] /= l
-        except ZeroDivisionError:
-            _v[0] = 0.
-            _v[1] = 0.
+        try:            
+            v[0] /= l
+            v[1] /= l
+        except ZeroDivisionError:            
+            v[0] = 0.
+            v[1] = 0.
         return self
     normalize = normalise
     
@@ -291,8 +305,7 @@ class Vector2(object):
         """Returns the distance to a point.
         
         p -- A Vector2 or list-like object with at least 2 values."""
-        x = self._x
-        y = self._y
+        x, y = self._v
         xx, yy = p
         dx = xx-x
         dy = yy-y
