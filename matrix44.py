@@ -2,8 +2,6 @@ from util import format_number
 from vector3 import Vector3
 
 from math import sin, cos, tan, sqrt, pi, radians
-from copy import deepcopy
-from array import array
 
 #import psyco
 #psyco.full()
@@ -31,6 +29,7 @@ class Matrix44(object):
     __slots__ = ('_m',)
     
     def __init__(self, *args):
+        
         """If no parameteres are given, the Matrix44 is initialised to the identity Matrix44.
         If 1 parameter is given it should be an iterable with the 16 values of the Matrix44.
         If 4 parameters are given they should be 4 sequences of up to 4 values.
@@ -551,7 +550,7 @@ class Matrix44(object):
         """
         
         try:
-            self._setters[row_no](row)            
+            self._setters[row_no](self, row)            
         except IndexError:
             raise IndexError( "Row should be 0, 1, 2 or 3" )
         
@@ -1101,7 +1100,9 @@ def test():
     
     print m
 
-        
+    identity = Matrix44()
+    identity.set_row(0, (1, 2, 3, 4))
+    print identity
         
 
 if __name__ == "__main__":
