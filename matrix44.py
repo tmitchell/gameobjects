@@ -369,7 +369,7 @@ class Matrix44(object):
     def __iter__(self):
         """Iterates over all 16 values in the Matrix44."""
         
-        return iter(self._m)
+        return iter(self._m[:])
             
             
     def __neg__(self):
@@ -516,9 +516,8 @@ class Matrix44(object):
         """        
         
         try:
-            r = row_no*4
-            m = self._m
-            x, y, z = m[r:r+3]
+            r = row_no*4            
+            x, y, z = self._m[r:r+3]
             return Vector3.from_floats(x, y, z)
         except IndexError:
             raise IndexError( "Row and Column should be 0, 1, 2 or 3" )
@@ -577,7 +576,7 @@ class Matrix44(object):
     
     
     def transform_vec3(self, v):
-        """Transforms a Vector3 and returns the result as a Vector3.
+        """Transforms a vector and returns the result as a Vector3.
         
         v -- Vector to transform
         
@@ -604,7 +603,7 @@ class Matrix44(object):
         
         
     def transform4(self, v):
-        """Transforms a Vector3 and returns the result as a tuple.
+        """Transforms a 4d vector and returns the result as a tuple.
         
         v -- Vector to transform
         
