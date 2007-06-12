@@ -10,7 +10,9 @@ Topic :: Games/Entertainment
 """
 
 from distutils.core import setup
-from gameobjects import __version__
+from __init__ import __version__
+
+print __version__
 
 print "Game Objects v" +  __version__
 
