@@ -10,15 +10,13 @@ Topic :: Games/Entertainment
 """
 
 from distutils.core import setup
-from __init__ import __version__
-
-print __version__
+from gameobjects.__init__ import __version__
 
 print "Game Objects v" +  __version__
 
 doclines = __doc__.split("\n")
 
-setup( name='gameobjects',
+setup( name = 'gameobjects',
        version = __version__,       
        author = 'Will McGugan',
        author_email = 'will@willmcgugan.com',
@@ -28,7 +26,7 @@ setup( name='gameobjects',
        platforms = ['any'],
        description = doclines[0],
        long_description = '\n'.join(doclines[2:]),
-       package_dir = {'gameobjects': ''},
+       #package_dir = {'gameobjects': './gameobjects'},
        packages = ['gameobjects'],
        classifiers = classifiers.splitlines(),
        )
