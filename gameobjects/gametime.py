@@ -152,6 +152,7 @@ class GameClock(object):
     
 if __name__ == "__main__":    
     
+    import time
     t = GameClock(20) # AI is 20 frames per second
     t.start()
     
