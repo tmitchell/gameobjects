@@ -139,7 +139,10 @@ class GameClock(object):
         
         self.between_frame = ( self.virtual_time - self.game_time ) / self.game_tick
             
-        self.fps = 1.0 / self.real_time_passed
+        if self.real_time_passed != 0:
+            self.fps = 1.0 / self.real_time_passed
+        else:
+            self.fps = 0.0
         
         self.fps_sample_count += 1
         
