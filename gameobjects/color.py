@@ -209,7 +209,7 @@ class ColorRGBA(object):
             raise IndexError, "Index must be 0, 1, 2, or 3"
         
     def __setitem__(self, index, value):
-        assert isinstance(vale, float), "Must be a float"
+        assert isinstance(value, float), "Must be a float"
         try:
             self._c[index] = value
         except IndexError:
@@ -291,7 +291,7 @@ class ColorRGBA(object):
     def __rmul__(self, lhs):
         
         r, g, b, a = self._c
-        return self.from_floats(lhs / r, lhs / g, lhs / b, a)
+        return self.from_floats(lhs * r, lhs * g, lhs * b, a)
             
     def __div__(self, rhs):
         
