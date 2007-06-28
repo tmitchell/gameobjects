@@ -8,7 +8,7 @@ class GameClock(object):
         
         """Create a Game Clock object.
         
-        game_ticks_per_second -- The number of 'AI' frames a second.
+        game_ticks_per_second -- The number of logic frames a second.
         
         """
             
