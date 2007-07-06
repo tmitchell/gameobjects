@@ -36,20 +36,18 @@ def xrange2d(range_x, range_y):
         for x in range_x:
             yield (x, y)
 
+
 def saturate(value, low, high):
     return min(max(value, low), high)
 
 
 def is_power_of_2(n):
-
     """Returns True if a value is a power of 2."""
-
     return log(n, 2) % 1.0 == 0.0
 
+
 def next_power_of_2(n):
-
     """Returns the next power of 2 that is >= n"""
-
     return int(2 ** ceil(log(n, 2)))
 
 if __name__ == "__main__":

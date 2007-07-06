@@ -11,8 +11,10 @@ class Vector2(object):
     def __init__(self, x=0., y=0.):
         """Initialise a vector
 
-        x -- The x value (defaults to 0.), or a container of 2 values
-        y -- The y value (defaults to 0.)
+        @type x: number
+        @param x: The x value (defaults to 0.), or a container of 2 values
+        @type x: number
+        @param y: The y value (defaults to 0.)
 
         """
         if hasattr(x, "__getitem__"):
@@ -48,7 +50,8 @@ class Vector2(object):
     @classmethod
     def from_iter(cls, iterable):
         """Creates a Vector2 object from an iterable.
-        iterable -- An iterable of at least 2 numeric values
+
+        @param iterable: An iterable of at least 2 numeric values
 
         """
         next = iter(iterable).next
@@ -60,8 +63,8 @@ class Vector2(object):
     @classmethod
     def from_points(cls, p1, p2):
         """Creates a Vector2 object between two points.
-        p1  -- First point
-        p2 -- Second point
+        @param p1: First point
+        @param p2: Second point
 
         """
         v = cls.__new__(cls, object)
@@ -276,9 +279,12 @@ class Vector2(object):
     def __call__(self, keys):
 
         """Used to swizzle a vector.
-        keys -- A string containing a list of component names
-        i.e. vec = Vector(1, 2)
-        vec('yx') --> (2, 1)
+
+        @type keys: string
+        @param keys: A string containing a list of component names
+        >>> vec = Vector(1, 2)
+        >>> vec('yx')
+        (1, 2)
 
         """
 
@@ -288,7 +294,11 @@ class Vector2(object):
 
 
     def as_tuple(self):
-        """Converts this vector to a tuple."""
+        """Converts this vector to a tuple.
+
+        @rtype: Tuple
+        @return: Tuple containing the vector components
+        """
         return tuple(self._v)
 
 
@@ -322,7 +332,9 @@ class Vector2(object):
     def get_distance_to(self, p):
         """Returns the distance to a point.
 
-        p -- A Vector2 or list-like object with at least 2 values."""
+        @param: A Vector2 or list-like object with at least 2 values.
+        @return: distance
+        """
         x, y = self._v
         xx, yy = p
         dx = xx-x

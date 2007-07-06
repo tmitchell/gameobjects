@@ -11,12 +11,13 @@ class Matrix44Error(Exception):
 
     """Matrix44 Exception class"""
 
-    def __init__(self, description):
+    def __init__(self, code, description):
         Exception.__init__(self)
+        self.code = code
         self.description = description
 
     def __str__(self):
-        return self.description
+        return "%s (%s)" % (self.description, self.code)
 
 
 class Row(tuple):
@@ -197,7 +198,7 @@ class Matrix44(object):
         m = cls.__new__(cls, object)
         m._m = map(float, iterable)
         if len(m._m) != 16:
-            raise Matrix44Error("Iterable must have 16 values")
+            raise ValueError("Iterable must have 16 values")
         return m
 
 
@@ -1150,7 +1151,7 @@ class Matrix44(object):
 
         if (det_1 == 0.) or (abs(det_1 / (negpos[1] - negpos[0])) < \
                              (2. * 0.00000000000000001) ):
-            raise Matrix44Error("This Matrix44 can not be inverted")
+            raise Matrix44Error("notivertable", "This Matrix44 can not be inverted")
 
         det_1 = 1. / det_1
 
