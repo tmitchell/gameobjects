@@ -219,7 +219,7 @@ class Vector3(object):
 
     def __hash__(self):
 
-        return hash(tuple(self._v))
+        return hash(self._v)
 
     def __add__(self, rhs):
         """Returns the result of adding a vector (or collection of 3 numbers)
@@ -319,7 +319,7 @@ class Vector3(object):
 
     def get_scalar_mul(self, scalar):
 
-        x, y, z = self.scalar
+        x, y, z = self._v
         return self.from_floats(x*scalar, y*scalar, z*scalar)
 
     def get_vector_mul(self, vector):
@@ -456,7 +456,7 @@ class Vector3(object):
     def __nonzero__(self):
 
         x, y, z = self._v
-        return x and y and z
+        return bool(x or y or z)
 
 
     def __call__(self, keys):
@@ -715,3 +715,5 @@ if __name__ == "__main__":
     print Vector3(10,10,30)+v1
 
     print Vector3((0,0,0,1))
+    
+    print bool(v1)

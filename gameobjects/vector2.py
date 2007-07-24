@@ -156,7 +156,7 @@ class Vector2(object):
 
     def __hash__(self):
 
-        return hash(tuple(self._v))
+        return hash(self._v)
 
     def __add__(self, rhs):
         x, y = self._v
@@ -274,7 +274,7 @@ class Vector2(object):
     def __nonzero__(self):
 
         x, y = self._v
-        return x and y
+        return bool(x or y)
 
     def __call__(self, keys):
 
