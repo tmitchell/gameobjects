@@ -487,15 +487,15 @@ class Vector3(object):
 
         """
         v = self._v
-        if hasattr(rhs, "__getitem__"):
-            ox, oy, oz = rhs
+        if hasattr(scale, "__getitem__"):
+            ox, oy, oz = scale
             v[0] *= ox
             v[1] *= oy
             v[2] *= oz
         else:
-            v[0] *= rhs
-            v[1] *= rhs
-            v[2] *= rhs
+            v[0] *= scale
+            v[1] *= scale
+            v[2] *= scale
 
         return self
 
@@ -715,5 +715,9 @@ if __name__ == "__main__":
     print Vector3(10,10,30)+v1
 
     print Vector3((0,0,0,1))
+    
+    print Vector3(1, 2, 3).scale(3)
+    
+    print Vector3(1, 2, 3).scale((2, 4, 6))
     
     print bool(v1)
