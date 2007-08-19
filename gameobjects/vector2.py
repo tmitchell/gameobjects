@@ -104,8 +104,8 @@ class Vector2(object):
             raise TypeError("Must be a number")
     y = property(get_y, set_y, None, "y component.")
 
-    u = property(get_x, set_y, None, "u component (alias for x).")
-    v = property(get_y, set_y, None, "v component (alias for y).")
+    #u = property(get_x, set_y, None, "u component (alias for x).")
+    #v = property(get_y, set_y, None, "v component (alias for y).")
 
     def __str__(self):
 

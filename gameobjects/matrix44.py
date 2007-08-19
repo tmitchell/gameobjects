@@ -1243,6 +1243,7 @@ def test():
     #print (10, 20, 30) + Vector3(1,2,3)
 
     m.translate = (m.translate[:3]) + Vector3(10, 20, 30)
+        
 
     print m
 

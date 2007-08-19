@@ -348,7 +348,7 @@ class ColorRGBA(object):
     def __nonzero__(self):
 
         r, g, b, a = self._c
-        return r and g and b and a
+        return bool(r or g or b or a)
 
     def __call__(self, keys):
 
